@@ -1,0 +1,12 @@
+1. post = localhost:4001/projectidEntry/postProjectidEntry
+	1. postman check json = 
+{
+    "ProjectName":43,
+    "Location":"madurai",
+    "EntryTime":"2025-07-18 02:06:00",
+    "CreatedBy": 1
+}
+-----------------------------------------------------------------------------------------------------
+2. get = localhost:4001/projectidEntry/getProjectidEntry/1
+
+-----------------------------------------------------------------------------------------------------
