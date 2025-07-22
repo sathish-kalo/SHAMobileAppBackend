@@ -215,11 +215,12 @@ FilteredDataYesterday AS (
     SELECT TOP 1 
         Id, CreatedBy, EntryTime, ProjectTypeId, CompanyType, PhotoTypeId, JobId, ProjectName
     FROM 
-        FilteredData
+        MB_Jobsheet
     WHERE 
-        CONVERT(DATE, EntryTime) = DATEADD(DAY, -1, @createdDate)
-        AND CAST(EntryTime AS TIME) >= '18:00:00'
-        AND CAST(EntryTime AS TIME) <= '23:59:59'
+        CreatedBy = @user_id
+        AND EntryTime BETWEEN 
+            DATEADD(HOUR, 20, DATEADD(DAY, -1, CAST(@createdDate AS DATETIME))) -- Yesterday 8 PM
+            AND DATEADD(HOUR, 7, CAST(@createdDate AS DATETIME)) -- Today 7 AM
     ORDER BY 
         EntryTime DESC
 )
@@ -313,7 +314,7 @@ if (drivers !== "") {
   }
 
   // ✅ SHIFT 2: 20:00 to 23:59
-  else if (hour >= 19 && hour <= 23) {
+  else if (hour > 19 && hour < 24) {
 
     let shift2Query = `
       SELECT 
@@ -370,7 +371,6 @@ if (drivers !== "") {
             const currentSecond = dateObject.getSeconds()
                                    
             console.log("currentHour: ",currentHour);
-
             
             
             //user enterstarttime after 8pm
