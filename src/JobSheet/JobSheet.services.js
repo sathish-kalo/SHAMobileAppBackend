@@ -19,14 +19,14 @@ const postCompanyMasterInsertFunction = async (CompanyType, ProjectType, PhotoTy
     .input('photoTypeIdvalue', sql.Int, PhotoType)
     .input('jobIdvalue', sql.Int, Job)
     .input('ProjectName', sql.Int, ProjectName)
-    .input('Location', sql.VarChar(50), Location)
+    .input('Location', sql.VarChar(500), Location)
     .input('ImageUpload', sql.VarChar(50), ImageUpload)
     .input("CreatedBy", sql.Int, user_id)
     .input("createdDateValue", moment().format('YYYY-MM-DD HH:mm:ss'))
     // .input("createdDateValue", moment().add(16, 'hours').format('YYYY-MM-DD HH:mm:ss'))
     .input("EntryTimeValue", createdDate)
     .input("devisionId", sql.Int, devisionId)
-   .input("drivers", sql.VarChar(100), drivers)
+    .input("drivers", sql.VarChar(100), drivers)
 
 
   const response = await request.query(postquery);
@@ -124,42 +124,42 @@ module.exports = {
 	  INNER JOIN UserMasterDetail u ON u.Userid = j.CreatedBy
       WHERE u.Userid =@Userid and 
         j.IsActive = 1`;
-        request.input('Userid', sql.Int, userid);
-        const response = await request.query(query);
+      request.input('Userid', sql.Int, userid);
+      const response = await request.query(query);
       return callback(null, response.recordset);
     } catch (err) {
       return callback(err)
     }
   },
-// new add jobsheetId start
-postJobsheetId : async (data, callback) => {
-  try {
+  // new add jobsheetId start
+  postJobsheetId: async (data, callback) => {
+    try {
       const { DivisionId, JobId, Location, EntryTime, CreatedBy } = data;
       // Validate required fields
       if (!DivisionId || !JobId || !Location || !EntryTime || !CreatedBy) {
-          return callback(null, "Missing required fields");
+        return callback(null, "Missing required fields");
       }
       const request = model.db.request();
       // Insert record into the table with default values for CreatedDate and IsActive
       const insertQuery = `INSERT INTO MB_JobIdEntry (DivisionId, JobId, Location, EntryTime, IsActive, CreatedBy, CreatedDate)
           VALUES (@DivisionId, @JobId, @Location, @EntryTime, 1, @CreatedBy, GETDATE())`;
       request
-          .input("DivisionId", DivisionId)
-          .input("JobId", JobId)
-          .input("Location", Location)
-          .input("EntryTime", EntryTime)
-          .input("CreatedBy", CreatedBy);
+        .input("DivisionId", DivisionId)
+        .input("JobId", JobId)
+        .input("Location", Location)
+        .input("EntryTime", EntryTime)
+        .input("CreatedBy", CreatedBy);
 
       await request.query(insertQuery);
 
       return callback(null, 1); // Success response
-  } catch (err) {
+    } catch (err) {
       //console.error("Error in service:", err);
       console.log(err)
       return callback(err)
-  }
-},
-// new add jobsheetId end
+    }
+  },
+  // new add jobsheetId end
   getProjectDetails: async (callback) => {
     try {
       const request = model.db.request();
@@ -177,20 +177,20 @@ postJobsheetId : async (data, callback) => {
       const { CompanyType, ProjectType, PhotoType, Job, ProjectName, Location, ImageUpload, user_id, devisionId, drivers } = data
 
       console.log("postCompanyMaster: ", data);
-      
+
       const request = model.db.request();
 
       // const createdDate = moment(ImageUpload[0].dateTime).utcOffset("+05:30").format('YYYY-MM-DD HH:mm:ss');
       // console.log("createdDateInner", createdDate)
 
       const createdDate = ImageUpload[0].dateTime
-      
-       console.log("createdDateInner", createdDate)
-      console.log("user_id: ",user_id);
-      
-     //let query = `Select CreatedBy,EntryTime ,ProjectTypeId,CompanyType,PhotoTypeId,JobId,ProjectName from MB_Jobsheet where CreatedBy = @user_id And CONVERT(DATE, EntryTime) = @createdDate order by Id`
-        //let query = `Select CreatedBy,EntryTime ,ProjectTypeId,CompanyType,PhotoTypeId,JobId,ProjectName from MB_Jobsheet where CreatedBy = @user_id AND (CAST(EntryTime AS TIME) >= '20:00:00' OR CAST(EntryTime AS TIME) <= '07:59:59') OR (CAST(EntryTime AS TIME) >= '8:00:00' OR CAST(EntryTime AS TIME) <= '19:59:59') order by Id`
-        let query = `WITH FilteredData AS (
+
+      console.log("createdDateInner", createdDate)
+      console.log("user_id: ", user_id);
+
+      //let query = `Select CreatedBy,EntryTime ,ProjectTypeId,CompanyType,PhotoTypeId,JobId,ProjectName from MB_Jobsheet where CreatedBy = @user_id And CONVERT(DATE, EntryTime) = @createdDate order by Id`
+      //let query = `Select CreatedBy,EntryTime ,ProjectTypeId,CompanyType,PhotoTypeId,JobId,ProjectName from MB_Jobsheet where CreatedBy = @user_id AND (CAST(EntryTime AS TIME) >= '20:00:00' OR CAST(EntryTime AS TIME) <= '07:59:59') OR (CAST(EntryTime AS TIME) >= '8:00:00' OR CAST(EntryTime AS TIME) <= '19:59:59') order by Id`
+      let query = `WITH FilteredData AS (
     SELECT 
         Id, CreatedBy, EntryTime, ProjectTypeId, CompanyType, PhotoTypeId, JobId, ProjectName
     FROM 
@@ -228,74 +228,74 @@ SELECT * FROM FilteredDataToday
 UNION
 SELECT * FROM FilteredDataYesterday;`
 
-/*let query = `WITH FilteredData AS (
-    SELECT 
-        Id, CreatedBy, EntryTime, ProjectTypeId, CompanyType, PhotoTypeId, JobId, ProjectName
-    FROM 
-        MB_Jobsheet
-    WHERE 
-        CreatedBy = 1 
-        AND (
-            CONVERT(DATE, EntryTime) = @createdDate
-            OR (CONVERT(DATE, EntryTime) = DATEADD(DAY, -1, @createdDate) 
-                AND CAST(EntryTime AS TIME) >= '20:00:00')
-        )
-)
-SELECT 
-    Id, CreatedBy, EntryTime, ProjectTypeId, CompanyType, PhotoTypeId, JobId, ProjectName
-FROM 
-    FilteredData
-WHERE 
-    CONVERT(DATE, EntryTime) = @createdDate
-    OR (
-        CONVERT(DATE, EntryTime) = DATEADD(DAY, -1, @createdDate)
-        AND CAST(EntryTime AS TIME) >= '20:00:00'
-    )
-ORDER BY 
-    CONVERT(DATE, EntryTime), EntryTime;`
-*/
-        request
+      /*let query = `WITH FilteredData AS (
+          SELECT 
+              Id, CreatedBy, EntryTime, ProjectTypeId, CompanyType, PhotoTypeId, JobId, ProjectName
+          FROM 
+              MB_Jobsheet
+          WHERE 
+              CreatedBy = 1 
+              AND (
+                  CONVERT(DATE, EntryTime) = @createdDate
+                  OR (CONVERT(DATE, EntryTime) = DATEADD(DAY, -1, @createdDate) 
+                      AND CAST(EntryTime AS TIME) >= '20:00:00')
+              )
+      )
+      SELECT 
+          Id, CreatedBy, EntryTime, ProjectTypeId, CompanyType, PhotoTypeId, JobId, ProjectName
+      FROM 
+          FilteredData
+      WHERE 
+          CONVERT(DATE, EntryTime) = @createdDate
+          OR (
+              CONVERT(DATE, EntryTime) = DATEADD(DAY, -1, @createdDate)
+              AND CAST(EntryTime AS TIME) >= '20:00:00'
+          )
+      ORDER BY 
+          CONVERT(DATE, EntryTime), EntryTime;`
+      */
+      request
         .input("user_id", user_id)
         .input("createdDate", createdDate.split(" ")[0])
-        // .input("drivers", drivers)
+      // .input("drivers", drivers)
 
       // .input("createdDate", moment().add(16, 'hours').format('YYYY-MM-DD HH:mm:ss'))
       const firstCheckResponse = await request.query(query);
       // console.log("test",firstCheckResponse)
-      console.log("drivers: ",drivers);
+      console.log("drivers: ", drivers);
 
 
-if (drivers !== "") {
-  const createdDate = data.ImageUpload[0].dateTime;
-  const timePart = createdDate.split(" ")[1];
-  const hour = parseInt(timePart.split(":")[0]);
-  const currentMinute = parseInt(timePart.split(":")[1]);
-  const currentSecond = parseInt(timePart.split(":")[2]);
+      if (drivers !== "") {
+        const createdDate = data.ImageUpload[0].dateTime;
+        const timePart = createdDate.split(" ")[1];
+        const hour = parseInt(timePart.split(":")[0]);
+        const currentMinute = parseInt(timePart.split(":")[1]);
+        const currentSecond = parseInt(timePart.split(":")[2]);
 
-  request.input("drivers1", sql.VarChar(100), drivers);
-  request.input("createdDateValue1", createdDate.split(" ")[0]);
-  
+        request.input("drivers1", sql.VarChar(100), drivers);
+        request.input("createdDateValue1", createdDate.split(" ")[0]);
 
-  // ✅ SHIFT 1: 00:00 to 19:59
-  if (hour >= 0 && hour < 19) {
 
-    let shift2Query = `
+        // ✅ SHIFT 1: 00:00 to 19:59
+        if (hour >= 0 && hour < 19) {
+
+          let shift2Query = `
       SELECT 
       COUNT(*) AS counts
       FROM MB_Jobsheet 
       WHERE CONVERT(DATE, EntryTime) = @createdDateValue1 
       AND CONVERT(TIME, EntryTime) BETWEEN '00:00:00' AND '18:59:59'
     `;
-    const shift2Res = await request.query(shift2Query);
-    console.log("shift1Res", shift2Res.recordset[0]);
+          const shift2Res = await request.query(shift2Query);
+          console.log("shift1Res", shift2Res.recordset[0]);
 
-    const { counts } = shift2Res.recordset[0];
+          const { counts } = shift2Res.recordset[0];
 
-    if(counts === 2){
-      return callback(null, "Driver already exists for this date and time");
-    }
+          if (counts === 2) {
+            return callback(null, "Driver already exists for this date and time");
+          }
 
-    let shift2iQuery = `
+          let shift2iQuery = `
           SELECT 
           COUNT(*) AS pickupCount
           FROM MB_Jobsheet 
@@ -304,35 +304,35 @@ if (drivers !== "") {
           AND CONVERT(TIME, EntryTime) BETWEEN '00:00:00' AND '18:59:59'
       `;
 
-        const shift2iRes = await request.query(shift2iQuery);
-        console.log("shift2iRes", shift2iRes.recordset[0]);
+          const shift2iRes = await request.query(shift2iQuery);
+          console.log("shift2iRes", shift2iRes.recordset[0]);
 
-        const { pickupCount } = shift2iRes.recordset[0];
-        if(pickupCount === 1){
-          return callback(null, "give endTime");
+          const { pickupCount } = shift2iRes.recordset[0];
+          if (pickupCount === 1) {
+            return callback(null, "give endTime");
+          }
         }
-  }
 
-  // ✅ SHIFT 2: 20:00 to 23:59
-  else if (hour > 19 && hour < 24) {
+        // ✅ SHIFT 2: 20:00 to 23:59
+        else if (hour > 19 && hour < 24) {
 
-    let shift2Query = `
+          let shift2Query = `
       SELECT 
       COUNT(*) AS counts
       FROM MB_Jobsheet 
       WHERE CONVERT(DATE, EntryTime) = @createdDateValue1 
       AND CONVERT(TIME, EntryTime) BETWEEN '19:00:00' AND '23:59:59'
     `;
-    const shift2Res = await request.query(shift2Query);
-    console.log("shift1Res", shift2Res.recordset[0]);
+          const shift2Res = await request.query(shift2Query);
+          console.log("shift1Res", shift2Res.recordset[0]);
 
-    const { counts } = shift2Res.recordset[0];
+          const { counts } = shift2Res.recordset[0];
 
-    if(counts === 2){
-      return callback(null, "Driver already exists for this date and time");
-    }
+          if (counts === 2) {
+            return callback(null, "Driver already exists for this date and time");
+          }
 
-    let shift2iQuery = `
+          let shift2iQuery = `
           SELECT 
           COUNT(*) AS pickupCount
           FROM MB_Jobsheet 
@@ -341,15 +341,15 @@ if (drivers !== "") {
           AND CONVERT(TIME, EntryTime) BETWEEN '19:00:00' AND '23:59:59'
       `;
 
-        const shift2iRes = await request.query(shift2iQuery);
-        console.log("shift2iRes", shift2iRes.recordset[0]);
+          const shift2iRes = await request.query(shift2iQuery);
+          console.log("shift2iRes", shift2iRes.recordset[0]);
 
-        const { pickupCount } = shift2iRes.recordset[0];
-        if(pickupCount === 1){
-          return callback(null, "give endTime");
+          const { pickupCount } = shift2iRes.recordset[0];
+          if (pickupCount === 1) {
+            return callback(null, "give endTime");
+          }
         }
-  }
-}
+      }
       if (firstCheckResponse.recordset.length > 0) {
         const recordSetLength = firstCheckResponse.recordset.length
         const lastrecard = firstCheckResponse.recordset[recordSetLength - 1]
@@ -369,16 +369,16 @@ if (drivers !== "") {
             const currentHour = dateObject.getHours();
             const currentMinute = dateObject.getMinutes()
             const currentSecond = dateObject.getSeconds()
-                                   
-            console.log("currentHour: ",currentHour);
-            
-            
+
+            console.log("currentHour: ", currentHour);
+
+
             //user enterstarttime after 8pm
             // if (currentHour >= 20) 
             if (currentHour > 20 || (currentHour === 20 && currentMinute >= 0 && currentSecond >= 0))
-          //  if (currentHour > 20 || (currentHour < 8 && currentMinute >= 0 && currentSecond >= 0))         
-             {
-              console.log("system time:",currentHour)
+            //  if (currentHour > 20 || (currentHour < 8 && currentMinute >= 0 && currentSecond >= 0))         
+            {
+              console.log("system time:", currentHour)
               return postCompanyMasterInsertFunction(CompanyType, ProjectType, PhotoType, Job, ProjectName, Location, ImageUpload[0].path, user_id, createdDate, request, callback, devisionId, drivers)
             } else {
               return callback(null, "Record exists");
@@ -428,8 +428,8 @@ if (drivers !== "") {
             return callback(null, "Enter correct PROJECTNAME");
           }
 
-          console.log("lastrecard.PhotoTypeId: ",lastrecard.PhotoTypeId);
-          console.log("PhotoType: ",PhotoType);
+          console.log("lastrecard.PhotoTypeId: ", lastrecard.PhotoTypeId);
+          console.log("PhotoType: ", PhotoType);
           if (lastrecard.PhotoTypeId === 2 && PhotoType === 2) {
             return callback(null, "give startTime")
           }
@@ -447,7 +447,7 @@ if (drivers !== "") {
 
           if (lastrecard.PhotoTypeId === 1 && PhotoType === 2 && lastrecard.JobId === Job && lastrecard.ProjectName === ProjectName) {
             console.log("******End time******");
-            
+
             postCompanyMasterInsertFunction(CompanyType, ProjectType, PhotoType, Job, ProjectName, Location, ImageUpload[0].path, user_id, createdDate, request, callback, devisionId, drivers)
           }
 
